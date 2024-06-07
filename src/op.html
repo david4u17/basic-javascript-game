@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoro's Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: url('https://www.japan.travel/content/dam/website-images/japan-2022/Japan-Hero.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        canvas {
+            display: block;
+            background: rgba(21, 19, 19, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const zoroImage = new Image();
+        zoroImage.src = 'zoro.png'; // URL to Zoro image
+
+        const weaponImage = new Image();
+        weaponImage.src = 'obs.jpeg'; // URL to weapon image
+
+        const zoro = {
+            x: 50,
+            y: canvas.height - 150,
+            width: 100,
+            height: 100,
+            dy: 0,
+            gravity: 0.5,
+            jumpPower: -15,
+            jump() {
+                if (this.y === canvas.height - this.height) {
+                    this.dy = this.jumpPower;
+                }
+            },
+            update() {
+                this.dy += this.gravity;
+                this.y += this.dy;
+
+                if (this.y > canvas.height - this.height) {
+                    this.y = canvas.height - this.height;
+                    this.dy = 0;
+                }
+            },
+            draw() {
+                ctx.drawImage(zoroImage, this.x, this.y, this.width, this.height);
+            }
+        };
+
+        class Weapon {
+            constructor(x, y, width, height, speed) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.speed = speed;
+            }
+            update() {
+                this.x -= this.speed;
+            }
+            draw() {
+                ctx.drawImage(weaponImage, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        const weapons = [];
+        let weaponInterval = 0;
+        let gameOver = false;
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            zoro.update();
+            zoro.draw();
+
+            if (weaponInterval % 90 === 0) {
+                const weaponHeight = 50;
+                const weaponWidth = 50;
+                const weaponX = canvas.width;
+                const weaponY = canvas.height - weaponHeight - Math.random() * 200;
+                const speed = 5 + Math.random() * 5;
+                weapons.push(new Weapon(weaponX, weaponY, weaponWidth, weaponHeight, speed));
+            }
+            weaponInterval++;
+
+            weapons.forEach((weapon, index) => {
+                weapon.update();
+                weapon.draw();
+
+                if (weapon.x + weapon.width < 0) {
+                    weapons.splice(index, 1);
+                }
+
+                if (zoro.x < weapon.x + weapon.width &&
+                    zoro.x + zoro.width > weapon.x &&
+                    zoro.y < weapon.y + weapon.height &&
+                    zoro.y + zoro.height > weapon.y) {
+                    gameOver = true;
+                    alert("Game Over!");
+                }
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                zoro.jump();
+            }
+        });
+
+        zoroImage.onload = () => {
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
